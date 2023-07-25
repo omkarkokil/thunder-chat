@@ -1,5 +1,6 @@
 import Image from "next/image";
 import React from "react";
+import AuthForm from "./components/AuthForm";
 
 const page = () => {
   return (
@@ -37,6 +38,7 @@ const page = () => {
             Sign in to your account
           </h2>
         </div>
+        <AuthForm />
       </div>
     </>
   );
