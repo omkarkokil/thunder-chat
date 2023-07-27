@@ -11,20 +11,20 @@ datasource db {
 }
 
 model User {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
-  name String? 
-  email String? @unique
-  emailVerified DateTime?
-  image String?
-  hashedPassword String?
-  createdAt DateTime @default(now())
-  UpdatedAt DateTime @updatedAt 
+  id              String @id @default(auto()) @map("_id") @db.ObjectId
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  hashedPassword  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   conversationIds String[] @db.ObjectId
-  conversations Conversations[] @relation(fields: [conversationIds] , references: [id] )
-
+  conversations Conversation[] @relation(fields: [conversationIds], references: [id])
+  
   seenMessageIds String[] @db.ObjectId
-  seenMessage Message[] @relation("Seen" ,fields: [seenMessageIds] , references: [id] )
+  seenMessages Message[] @relation("Seen", fields: [seenMessageIds], references: [id])
 
   accounts Account[]
   messages Message[]
@@ -49,33 +49,32 @@ model Account {
   @@unique([provider, providerAccountId])
 }
 
-model Conversations{
-    id String @id @default(auto()) @map("_id") @db.ObjectId
-    createdAt DateTime @default(now())
-    UpdatedAt DateTime @updatedAt 
-    lastMessageAt DateTime @default(now())
-    name String? 
-    isGroup Boolean?
+model Conversation {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt       DateTime @default(now())
+  lastMessageAt DateTime @default(now())
+  name String?
+  isGroup Boolean?
+  
+  messagesIds String[] @db.ObjectId
+  messages Message[]
 
-    userIds String[] @db.ObjectId
-    users User[] @relation(fields: [userIds] , references: [id])
-
-    messageIds String[] @db.ObjectId
-    message Message[]
+  userIds String[] @db.ObjectId
+  users User[] @relation(fields: [userIds], references: [id])
 }
 
-model Message{
+model Message {
   id String @id @default(auto()) @map("_id") @db.ObjectId
   body String?
   image String?
   createdAt DateTime @default(now())
 
   seenIds String[] @db.ObjectId
-  seen User[] @relation("Seen" , fields: [seenIds] , references: [id])
+  seen User[] @relation("Seen", fields: [seenIds], references: [id])
 
-  conversationIds String @db.ObjectId
-  conversation Conversations @relation(fields: [conversationIds] , references: [id])
-
+  conversationId String @db.ObjectId
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
   senderId String @db.ObjectId
-  senders User @relation(fields: [senderId] , references: [id])
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
 }
