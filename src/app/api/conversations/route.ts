@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       return new NextResponse("Invalid data", { status: 400 });
 
     if (isGroup) {
-      const newConversations = await client.conversations.create({
+      const newConversations = await client.conversation.create({
         data: {
           name,
           isGroup,
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json(newConversations);
     }
 
-    const exisitingConversations = await client.conversations.findMany({
+    const exisitingConversations = await client.conversation.findMany({
       where: {
         OR: [
           {
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
       return NextResponse.json(singleConversations);
     }
 
-    const newConversations = await client.conversations.create({
+    const newConversations = await client.conversation.create({
       data: {
         users: {
           connect: [{ id: currentUser.id }, { id: userId }],
