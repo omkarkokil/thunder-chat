@@ -20,8 +20,6 @@ const MessageBox: FC<MessageBoxProps> = ({ data, isLast }) => {
     .map((user) => user.name)
     .join(", ");
 
-  console.log(isLast, isOwn, seenList);
-
   const container = clsx("flex gap-3 p-4", isOwn && "justify-end");
 
   const avatar = clsx(isOwn && "order-2");
