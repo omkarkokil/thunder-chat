@@ -1,6 +1,7 @@
 "use client";
 
 import Avatar from "@/components/Avatar";
+import ConfirmModal from "@/components/Modal/ConfirmModal";
 import useOtherUser from "@/hooks/useOtherUser";
 import { Dialog, Transition } from "@headlessui/react";
 import { Conversation, User } from "@prisma/client";
@@ -35,6 +36,12 @@ const ProfileDrawer: FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) => {
 
   return (
     <>
+      <ConfirmModal
+        isOpen={confirmOpen}
+        onClose={() => {
+          setConfirmOpen(false);
+        }}
+      />
       <Transition.Root show={isOpen} as={Fragment}>
         <Dialog as="div" className="relative z-50" onClose={onClose}>
           <Transition.Child
@@ -88,7 +95,9 @@ const ProfileDrawer: FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) => {
                           </div>
                           <div className="flex gap-10 my-8">
                             <div
-                              onClick={() => {}}
+                              onClick={() => {
+                                setConfirmOpen(true);
+                              }}
                               className="flex flex-col gap-3 items-center cursor-pointer hover:opacity-75"
                             >
                               <div className="w-10 h-10 bg-neutral-100 rounded-full flex items-center justify-center">

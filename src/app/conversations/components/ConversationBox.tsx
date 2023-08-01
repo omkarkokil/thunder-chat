@@ -18,7 +18,6 @@ interface ConversationBoxProps {
 
 const ConversationBox: FC<ConversationBoxProps> = ({ data, selected }) => {
   const otherUser = useOtherUser(data);
-  console.log(data, "give me data");
 
   const session = useSession();
   const router = useRouter();
