@@ -2,7 +2,7 @@ import { withAuth } from "next-auth/middleware";
 
 export default withAuth({
   pages: {
-    signIn: "/",
+    signIn: "https://thunder-chat-navy.vercel.app/",
   },
 });
 
