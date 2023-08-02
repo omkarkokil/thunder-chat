@@ -1,6 +1,6 @@
 "use client";
 import useConversation from "@/hooks/useConversation";
-import { Conversation } from "@prisma/client";
+import { Conversation, User } from "@prisma/client";
 import clsx from "clsx";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -8,13 +8,18 @@ import React, { FC, useState } from "react";
 import { MdOutlineGroupAdd } from "react-icons/md";
 import ConversationBox from "./ConversationBox";
 import { FullConversationType } from "@/app/types";
+import GroupChatModal from "@/components/Modal/GroupChatModal";
 
 interface ConversationlistProps {
   // Maybe generate type error which can be solved by types/index.ts file
   initialItems: FullConversationType[];
+  users: User[];
 }
 
-const ConversationList: FC<ConversationlistProps> = ({ initialItems }) => {
+const ConversationList: FC<ConversationlistProps> = ({
+  initialItems,
+  users,
+}) => {
   const [items, setItems] = useState(initialItems);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -25,6 +30,11 @@ const ConversationList: FC<ConversationlistProps> = ({ initialItems }) => {
 
   return (
     <>
+      <GroupChatModal
+        users={users}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
       <aside
         className={clsx(
           `

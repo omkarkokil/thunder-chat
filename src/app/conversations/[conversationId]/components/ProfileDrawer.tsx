@@ -1,6 +1,7 @@
 "use client";
 
 import Avatar from "@/components/Avatar";
+import AvatarGroup from "@/components/AvatarGroup";
 import ConfirmModal from "@/components/Modal/ConfirmModal";
 import useOtherUser from "@/hooks/useOtherUser";
 import { Dialog, Transition } from "@headlessui/react";
@@ -25,7 +26,7 @@ const ProfileDrawer: FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) => {
 
   const title = useMemo(() => {
     return data.name || otherUser.name;
-  }, [data.name, otherUser.name]);
+  }, [data?.name, otherUser?.name]);
 
   const statusText = useMemo(() => {
     if (data.isGroup) {
@@ -87,7 +88,11 @@ const ProfileDrawer: FC<ProfileDrawerProps> = ({ isOpen, onClose, data }) => {
                       <div className="relative mt-6 flex-1 sm:px-6">
                         <div className="flex flex-col items-center">
                           <div className="mb-2">
-                            <Avatar user={otherUser} />
+                            {data.isGroup ? (
+                              <AvatarGroup users={data.users} />
+                            ) : (
+                              <Avatar user={otherUser} />
+                            )}
                           </div>
                           <div>{title}</div>
                           <div className="text-sm text-gray-500">

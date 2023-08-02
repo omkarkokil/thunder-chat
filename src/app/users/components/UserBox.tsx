@@ -1,4 +1,5 @@
 import Avatar from "@/components/Avatar";
+import LoadingModal from "@/components/Modal/LoadingModal";
 import { User } from "@prisma/client";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -19,12 +20,13 @@ const UserBox: FC<UserBoxProps> = ({ data }) => {
         userId: data.id,
       })
       .then((data) => {
-        router.push(`/conversation/${data.data.id}`);
+        router.push(`/conversations/${data.data.id}`);
       });
   }, [data, router]);
 
   return (
     <>
+      {isLoading && <LoadingModal />}
       <div
         onClick={handleClick}
         className="
