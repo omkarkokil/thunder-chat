@@ -1,21 +1,32 @@
 import getCurrentUser from "@/app/actions/getCurrentUser";
-import client from "@/libs/prismadb";
 import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+import prisma from "@/libs/prismadb";
+import { pusherServer } from "@/libs/pusher";
+
+export async function POST(
+  request: Request,
+) {
   try {
     const currentUser = await getCurrentUser();
     const body = await request.json();
-    const { userId, isGroup, members, name } = body;
+    const {
+      userId,
+      isGroup,
+      members,
+      name
+    } = body;
 
-    if (!currentUser?.id || !currentUser.email)
-      return new NextResponse("unauthorized", { status: 405 });
+    if (!currentUser?.id || !currentUser?.email) {
+      return new NextResponse('Unauthorized', { status: 400 });
+    }
 
-    if (isGroup && (!members || members.length < 2 || !name))
-      return new NextResponse("Invalid data", { status: 400 });
+    if (isGroup && (!members || members.length < 2 || !name)) {
+      return new NextResponse('Invalid data', { status: 400 });
+    }
 
     if (isGroup) {
-      const newConversations = await client.conversation.create({
+      const newConversation = await prisma.conversation.create({
         data: {
           name,
           isGroup,
@@ -25,54 +36,76 @@ export async function POST(request: Request) {
                 id: member.value
               })),
               {
-                id: currentUser.id,
-              },
-            ],
-          },
+                id: currentUser.id
+              }
+            ]
+          }
         },
         include: {
           users: true,
-        },
+        }
       });
 
-      return NextResponse.json(newConversations);
+      // Update all connections with new conversation
+      newConversation.users.forEach((user) => {
+        if (user.email) {
+          pusherServer.trigger(user.email, 'conversation:new', newConversation);
+        }
+      });
+
+      return NextResponse.json(newConversation);
     }
 
-    const exisitingConversations = await client.conversation.findMany({
+    const existingConversations = await prisma.conversation.findMany({
       where: {
         OR: [
           {
             userIds: {
-              equals: [currentUser.id, userId],
-            },
+              equals: [currentUser.id, userId]
+            }
           },
           {
             userIds: {
-              equals: [userId, currentUser.id],
-            },
-          },
-        ],
-      },
+              equals: [userId, currentUser.id]
+            }
+          }
+        ]
+      }
     });
 
-    const singleConversations = exisitingConversations[0];
-    if (singleConversations) {
-      return NextResponse.json(singleConversations);
+    const singleConversation = existingConversations[0];
+
+    if (singleConversation) {
+      return NextResponse.json(singleConversation);
     }
 
-    const newConversations = await client.conversation.create({
+    const newConversation = await prisma.conversation.create({
       data: {
         users: {
-          connect: [{ id: currentUser.id }, { id: userId }],
-        },
+          connect: [
+            {
+              id: currentUser.id
+            },
+            {
+              id: userId
+            }
+          ]
+        }
       },
       include: {
-        users: true,
-      },
+        users: true
+      }
     });
 
-    return NextResponse.json(newConversations);
+    // Update all connections with new conversation
+    newConversation.users.map((user) => {
+      if (user.email) {
+        pusherServer.trigger(user.email, 'conversation:new', newConversation);
+      }
+    });
+
+    return NextResponse.json(newConversation)
   } catch (error) {
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse('Internal Error', { status: 500 });
   }
 }

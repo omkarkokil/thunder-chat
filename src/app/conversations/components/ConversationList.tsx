@@ -1,22 +1,26 @@
 "use client";
-import useConversation from "@/hooks/useConversation";
-import { Conversation, User } from "@prisma/client";
-import clsx from "clsx";
-import { useSession } from "next-auth/react";
+
+import { User } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import React, { FC, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react";
 import { MdOutlineGroupAdd } from "react-icons/md";
+import clsx from "clsx";
+import { find, uniq } from "lodash";
+
+import useConversation from "@/hooks/useConversation";
+import { pusherclient } from "@/libs/pusher";
 import ConversationBox from "./ConversationBox";
 import { FullConversationType } from "@/app/types";
 import GroupChatModal from "@/components/Modal/GroupChatModal";
 
-interface ConversationlistProps {
-  // Maybe generate type error which can be solved by types/index.ts file
+interface ConversationListProps {
   initialItems: FullConversationType[];
   users: User[];
+  title?: string;
 }
 
-const ConversationList: FC<ConversationlistProps> = ({
+const ConversationList: React.FC<ConversationListProps> = ({
   initialItems,
   users,
 }) => {
@@ -27,6 +31,57 @@ const ConversationList: FC<ConversationlistProps> = ({
   const session = useSession();
 
   const { conversationId, isOpen } = useConversation();
+
+  const pusherKey = useMemo(() => {
+    return session.data?.user?.email;
+  }, [session.data?.user?.email]);
+
+  useEffect(() => {
+    if (!pusherKey) {
+      return;
+    }
+
+    pusherclient.subscribe(pusherKey);
+
+    const updateHandler = (conversation: FullConversationType) => {
+      setItems((current) =>
+        current.map((currentConversation) => {
+          if (currentConversation.id === conversation.id) {
+            return {
+              ...currentConversation,
+              messages: conversation.messages,
+            };
+          }
+
+          return currentConversation;
+        })
+      );
+    };
+
+    const newHandler = (conversation: FullConversationType) => {
+      setItems((current) => {
+        if (find(current, { id: conversation.id })) {
+          return current;
+        }
+
+        return [conversation, ...current];
+      });
+    };
+
+    const removeHandler = (conversation: FullConversationType) => {
+      setItems((current) => {
+        return [...current.filter((convo) => convo.id !== conversation.id)];
+      });
+
+      if (conversationId === conversation.id) {
+        router.push("/conversations");
+      }
+    };
+
+    pusherclient.bind("conversation:update", updateHandler);
+    pusherclient.bind("conversation:new", newHandler);
+    pusherclient.bind("conversation:remove", removeHandler);
+  }, [pusherKey, router]);
 
   return (
     <>
